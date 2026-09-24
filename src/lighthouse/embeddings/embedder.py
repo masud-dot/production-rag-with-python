@@ -62,9 +62,10 @@ class SpacyEmbedder:
         vecs = [t.vector for t in doc if t.has_vector and not t.is_space]
         if not vecs:
             return np.zeros(self.dim, dtype="float32")
-        v = np.mean(vecs, axis=0)
-        n = np.linalg.norm(v)
-        return (v / n) if n > 0 else v
+        v = cast(np.ndarray[Any, Any], np.mean(np.vstack(vecs), axis=0))
+        n = float(np.linalg.norm(v))
+        result = (v / n) if n > 0 else v
+        return cast(np.ndarray[Any, Any], result)
 
     def fit_transform(self, texts: list[str]) -> np.ndarray[Any, Any]:
         return np.vstack([self._vec(t) for t in texts]).astype("float32")
