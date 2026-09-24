@@ -29,7 +29,7 @@ def reciprocal_rank(ranked: list[str], gold: set[str]) -> float:
 
 
 def ndcg_at_k(ranked: list[str], grades: dict[str, int], k: int) -> float:
-    def dcg(items):
+    def dcg(items: list[int]) -> float:
         return sum((2 ** g - 1) / math.log2(i + 1)
                    for i, g in enumerate(items, start=1))
     actual = dcg([grades.get(c, 0) for c in ranked[:k]])

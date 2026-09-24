@@ -4,7 +4,7 @@ From *Retrieval-Augmented Generation (RAG) in Production*, Chapter 6.
 """
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Any, Protocol
 
 from lighthouse.ingestion.schema import ChunkMeta
 
@@ -12,16 +12,16 @@ from lighthouse.ingestion.schema import ChunkMeta
 class Chunker(Protocol):
     name: str
 
-    def split(self, doc: dict) -> list[str]: ...
+    def split(self, doc: dict[str, Any]) -> list[str]: ...
 
 
 class FixedChunker:
     name = "fixed"
 
-    def __init__(self, size: int = 800, overlap: int = 100):
+    def __init__(self, size: int = 800, overlap: int = 100) -> None:
         self.size, self.overlap = size, overlap
 
-    def split(self, doc):
+    def split(self, doc: dict[str, Any]) -> list[str]:
         step = self.size - self.overlap
         t = doc["text"]
         return [t[i:i + self.size] for i in range(0, len(t), step)] or [t]
@@ -30,11 +30,12 @@ class FixedChunker:
 class RecursiveChunker:
     name = "recursive"
 
-    def __init__(self, size: int = 800, overlap: int = 100):
+    def __init__(self, size: int = 800, overlap: int = 100) -> None:
         self.size, self.overlap = size, overlap
 
-    def split(self, doc):
-        out, cur = [], ""
+    def split(self, doc: dict[str, Any]) -> list[str]:
+        out: list[str] = []
+        cur = ""
         for para in doc["text"].split("\n"):
             if len(cur) + len(para) + 1 > self.size and cur:
                 out.append(cur)
@@ -48,11 +49,12 @@ class RecursiveChunker:
 class StructuralChunker:
     name = "structural"
 
-    def __init__(self, max_size: int = 1200):
+    def __init__(self, max_size: int = 1200) -> None:
         self.max_size = max_size
 
-    def split(self, doc):
-        chunks, cur = [], []
+    def split(self, doc: dict[str, Any]) -> list[str]:
+        chunks: list[str] = []
+        cur: list[str] = []
         for block in doc["blocks"]:
             opens = block["clause"] is not None
             big = sum(len(x) for x in cur) > self.max_size
@@ -69,20 +71,26 @@ class ParentChunker:
     """Index child chunks, return the whole document section."""
     name = "parent"
 
-    def __init__(self, size: int = 300):
+    def __init__(self, size: int = 300) -> None:
         self.size = size
 
-    def split(self, doc):
-        out = []
+    def split(self, doc: dict[str, Any]) -> list[str]:
+        out: list[str] = []
         for block in doc["blocks"]:
             t = block["text"]
-            out.extend(t[i:i + self.size]
-                       for i in range(0, len(t), self.size)) if t else None
+            if t:
+                out.extend(
+                    t[i:i + self.size]
+                    for i in range(0, len(t), self.size)
+                )
         return out or [doc["text"]]
 
 
-def build_chunks(docs, chunker) -> tuple[list[ChunkMeta], list[str]]:
-    metas, texts = [], []
+def build_chunks(
+    docs: list[dict[str, Any]], chunker: Chunker
+) -> tuple[list[ChunkMeta], list[str]]:
+    metas: list[ChunkMeta] = []
+    texts: list[str] = []
     for doc in docs:
         for i, piece in enumerate(chunker.split(doc)):
             metas.append(ChunkMeta(

@@ -4,10 +4,12 @@ From *Retrieval-Augmented Generation (RAG) in Production*, Chapter 7.
 """
 from __future__ import annotations
 
+from typing import Any, cast
+
 import numpy as np
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import Normalizer
 
 from lighthouse.retrieval.keyword import tokenize
@@ -18,11 +20,11 @@ class LsaEmbedder:
     name = "tfidf-svd-256"
     dim = 256
 
-    def __init__(self, seed: int = 0):
+    def __init__(self, seed: int = 0) -> None:
         self.seed = seed
-        self.pipe = None
+        self.pipe: Pipeline | None = None
 
-    def fit_transform(self, texts):
+    def fit_transform(self, texts: list[str]) -> np.ndarray[Any, Any]:
         vec = TfidfVectorizer(tokenizer=tokenize, lowercase=False,
                               token_pattern=None, min_df=1)
         matrix = vec.fit_transform(texts)
@@ -32,10 +34,14 @@ class LsaEmbedder:
             vec, TruncatedSVD(n_components=self.dim,
                               random_state=self.seed),
             Normalizer(copy=False))
-        return self.pipe.fit_transform(texts)
+        result = self.pipe.fit_transform(texts)
+        return cast(np.ndarray[Any, Any], result)
 
-    def encode(self, texts):
-        return self.pipe.transform(texts)
+    def encode(self, texts: list[str]) -> np.ndarray[Any, Any]:
+        if self.pipe is None:
+            raise RuntimeError("embedder must be fitted before encode")
+        result = self.pipe.transform(texts)
+        return cast(np.ndarray[Any, Any], result)
 
 
 class SpacyEmbedder:
@@ -45,13 +51,13 @@ class SpacyEmbedder:
     name = "en_core_web_md-3.8.0"
     dim = 300
 
-    def __init__(self):
+    def __init__(self) -> None:
         import spacy
         self._nlp = spacy.load("en_core_web_md",
                                exclude=["parser", "ner", "tagger",
                                         "lemmatizer", "attribute_ruler"])
 
-    def _vec(self, text):
+    def _vec(self, text: str) -> np.ndarray[Any, Any]:
         doc = self._nlp.make_doc(text[:20000])
         vecs = [t.vector for t in doc if t.has_vector and not t.is_space]
         if not vecs:
@@ -60,13 +66,13 @@ class SpacyEmbedder:
         n = np.linalg.norm(v)
         return (v / n) if n > 0 else v
 
-    def fit_transform(self, texts):
+    def fit_transform(self, texts: list[str]) -> np.ndarray[Any, Any]:
         return np.vstack([self._vec(t) for t in texts]).astype("float32")
 
-    def encode(self, texts):
+    def encode(self, texts: list[str]) -> np.ndarray[Any, Any]:
         return np.vstack([self._vec(t) for t in texts]).astype("float32")
 
-    def oov_fraction(self, text) -> float:
+    def oov_fraction(self, text: str) -> float:
         doc = self._nlp.make_doc(text)
         toks = [t for t in doc if not t.is_space and not t.is_punct]
         if not toks:

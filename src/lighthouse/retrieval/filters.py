@@ -5,6 +5,9 @@ From *Retrieval-Augmented Generation (RAG) in Production*, Chapter 13.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections.abc import Sequence
+
+from lighthouse.ingestion.schema import ChunkMeta
 
 
 ROLE_ACCESS = {
@@ -21,11 +24,11 @@ class UserContext:
     as_of: str | None = None
 
 
-def allowed_ids(metas, ctx: UserContext) -> set[str]:
+def allowed_ids(metas: Sequence[ChunkMeta], ctx: UserContext) -> set[str]:
     levels = ROLE_ACCESS.get(ctx.role)
     if levels is None:
         raise PermissionError(f"unknown role: {ctx.role}")
-    out = set()
+    out: set[str] = set()
     for m in metas:
         if m.access not in levels:
             continue
