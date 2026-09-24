@@ -1,0 +1,7 @@
+# Upper bounds for the flexible tier (Appendix A, Tier 2).
+# Use with: pip install -r requirements.txt -c constraints.txt
+numpy<3
+scikit-learn<2
+pydantic<3
+fastapi<1
+httpx<1

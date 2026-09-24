@@ -1,0 +1,35 @@
+# Pinned for reproducibility. Verified against PyPI, September 2026.
+# See Appendix A. Do not upgrade casually: the four entries marked
+# VERSION-SENSITIVE have APIs the book shows directly.
+
+numpy==2.4.4
+scikit-learn==1.8.0
+rank-bm25==0.2.2
+
+# --- retrieval and serving ---
+qdrant-client==1.19.0          # VERSION-SENSITIVE: filter model, query_points
+faiss-cpu==1.15.0
+fastapi==0.141.1
+uvicorn==0.53.0
+pydantic==2.13.5
+pydantic-settings==2.15.0
+httpx==0.28.1
+
+# --- models ---
+openai==3.14.0                 # VERSION-SENSITIVE: Responses API shape
+anthropic==1.5.0
+sentence-transformers==6.0.1   # VERSION-SENSITIVE: CrossEncoder moved module
+tiktoken==0.14.0
+
+# --- ingestion ---
+pypdf==6.18.1
+unstructured==0.27.6
+
+# --- evaluation and operations ---
+ragas==0.4.3                   # VERSION-SENSITIVE: pre-1.0, metrics rename
+opentelemetry-sdk==1.44.0
+psycopg==3.3.5
+
+# --- development ---
+pytest==9.1.1
+mypy==1.14.1

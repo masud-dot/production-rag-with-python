@@ -1,0 +1,22 @@
+[project]
+name = "production-rag-with-python"
+version = "1.0.0"
+description = "Companion code for Retrieval-Augmented Generation (RAG) in Production"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests", "data", "evaluation"]
+ignore_missing_imports = true
