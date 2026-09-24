@@ -59,7 +59,7 @@ class SpacyEmbedder:
 
     def _vec(self, text: str) -> np.ndarray[Any, Any]:
         doc = self._nlp.make_doc(text[:20000])
-        vecs = [t.vector for t in doc if t.has_vector and not t.is_space]
+        vecs = [np.asarray(t.vector, dtype=np.float32) for t in doc if t.has_vector and not t.is_space]
         if not vecs:
             return np.zeros(self.dim, dtype="float32")
         v = cast(np.ndarray[Any, Any], np.mean(np.vstack(vecs), axis=0))
